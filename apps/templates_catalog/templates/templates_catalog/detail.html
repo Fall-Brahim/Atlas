@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ template.name }} | AtlasCloud{% endblock %}
+
+{% block content %}
+<main class="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+    <a href="{% url 'templates_catalog:list' %}" class="text-sm text-cyan-600 hover:text-cyan-500 dark:text-cyan-400 dark:hover:text-cyan-300">← Template catalog</a>
+    <div class="mt-5 flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+        <div class="flex gap-4">
+            {% if template.icon %}
+            <img src="{% static 'img/templates/'|add:template.icon|add:'.svg' %}" alt="{{ template.name }} logo" class="h-14 w-14 shrink-0 rounded-2xl" width="56" height="56">
+            {% else %}
+            <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-sm font-bold uppercase text-cyan-700 dark:text-cyan-300">APP</span>
+            {% endif %}
+            <div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">{{ template.name }}</h1>
+                    <span class="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">Available</span>
+                </div>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ template.get_category_display }} · Version {{ template.version }}</p>
+            </div>
+        </div>
+        <a href="{% url 'templates_catalog:use' template.slug %}" class="rounded-lg bg-cyan-400 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300">Use this template</a>
+    </div>
+    <div class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">About this template</h2>
+            <p class="mt-4 whitespace-pre-line text-slate-600 dark:text-slate-300">{{ template.description }}</p>
+            {% if template.documentation %}
+            <h2 class="mt-8 text-xl font-semibold text-slate-900 dark:text-white">Documentation</h2>
+            <div class="mt-4 whitespace-pre-line text-sm leading-6 text-slate-600 dark:text-slate-300">{{ template.documentation }}</div>
+            {% endif %}
+        </section>
+        <div class="space-y-6">
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Technology stack</h2>
+                <dl class="mt-4 space-y-3">
+                    {% for key, value in template.technology_stack.items %}
+                    <div class="flex justify-between gap-4 text-sm"><dt class="text-slate-500 dark:text-slate-400">{{ key|title }}</dt><dd class="text-right font-medium text-slate-900 dark:text-white">{{ value }}</dd></div>
+                    {% empty %}
+                    <p class="text-sm text-slate-500 dark:text-slate-400">No stack metadata provided.</p>
+                    {% endfor %}
+                </dl>
+            </section>
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Configuration</h2>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ template.configuration_schema.fields|length }} supported field{{ template.configuration_schema.fields|length|pluralize }} for future deployments.</p>
+            </section>
+        </div>
+    </div>
+</main>
+{% endblock %}

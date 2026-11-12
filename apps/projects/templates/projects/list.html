@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ organization.name }} Projects | AtlasCloud{% endblock %}
+
+{% block content %}
+<main class="mx-auto min-h-screen max-w-5xl px-4 py-12">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+            <a href="{% url 'organizations:detail' organization.slug %}" class="text-sm text-cyan-600 hover:text-cyan-500 dark:text-cyan-400 dark:hover:text-cyan-300">← {{ organization.name }}</a>
+            <h1 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white">Projects</h1>
+        </div>
+        <a href="{% url 'projects:create' organization.slug %}" class="rounded-lg bg-cyan-400 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300">Create project</a>
+    </div>
+    <div class="mt-8 grid gap-4 md:grid-cols-2">
+        {% for project in projects %}
+        <a href="{% url 'projects:detail' organization.slug project.slug %}" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-cyan-500 dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-start justify-between gap-4">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-white">{{ project.name }}</h2>
+                <span class="rounded-full px-2.5 py-1 text-xs font-semibold
+                    {% if project.status == 'ACTIVE' %}bg-emerald-500/10 text-emerald-700 dark:text-emerald-300
+                    {% elif project.status == 'ARCHIVED' %}bg-slate-500/10 text-slate-600 dark:text-slate-300
+                    {% else %}bg-amber-500/10 text-amber-700 dark:text-amber-300{% endif %}">
+                    {{ project.get_status_display }}
+                </span>
+            </div>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ project.description|default:"No description yet." }}</p>
+            {% if project.template %}<p class="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">Template: {{ project.template.name }} · v{{ project.template.version }}</p>{% endif %}
+        </a>
+        {% empty %}
+        <p class="rounded-2xl border border-dashed border-slate-300 p-8 text-slate-500 dark:border-slate-700 dark:text-slate-400">No projects have been created yet.</p>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Template Catalog | AtlasCloud{% endblock %}
+
+{% block content %}
+<main class="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+    <div>
+        <p class="text-sm font-semibold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">Platform resources</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Application templates</h1>
+        <p class="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">Reusable foundations for applications and infrastructure managed by AtlasCloud.</p>
+    </div>
+    <form method="get" class="mt-8 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-[1fr_14rem_auto] sm:items-end dark:border-slate-800 dark:bg-slate-900">
+        <div>
+            <label for="{{ form.query.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">{{ form.query.label }}</label>
+            {{ form.query }}
+        </div>
+        <div>
+            <label for="{{ form.category.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">{{ form.category.label }}</label>
+            {{ form.category }}
+        </div>
+        <button type="submit" class="rounded-lg bg-cyan-500 px-4 py-2.5 font-semibold text-slate-950 hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-300">Search</button>
+    </form>
+    <div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {% for template in templates %}
+        <a href="{% url 'templates_catalog:detail' template.slug %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-500 dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-start justify-between gap-4">
+                {% if template.icon %}
+                <img src="{% static 'img/templates/'|add:template.icon|add:'.svg' %}" alt="{{ template.name }} logo" class="h-10 w-10 rounded-xl" width="40" height="40">
+                {% else %}
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-sm font-bold uppercase text-cyan-700 dark:text-cyan-300">APP</span>
+                {% endif %}
+                <span class="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">Available</span>
+            </div>
+            <h2 class="mt-5 text-lg font-semibold text-slate-900 group-hover:text-cyan-600 dark:text-white dark:group-hover:text-cyan-300">{{ template.name }}</h2>
+            <p class="mt-2 line-clamp-3 text-sm text-slate-500 dark:text-slate-400">{{ template.description }}</p>
+            <div class="mt-5 flex items-center justify-between text-xs">
+                <span class="font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">{{ template.get_category_display }}</span>
+                <span class="text-slate-500 dark:text-slate-400">v{{ template.version }}</span>
+            </div>
+        </a>
+        {% empty %}
+        <div class="rounded-2xl border border-dashed border-slate-300 p-8 md:col-span-2 lg:col-span-3 dark:border-slate-700">
+            <p class="font-medium text-slate-900 dark:text-white">No templates found</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try another search or category.</p>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,8 @@
+.atlas/
+__pycache__/
+*.py[cod]
+db.sqlite3
+staticfiles/
+.env
+.pytest_cache/
+theme/static/css/dist/

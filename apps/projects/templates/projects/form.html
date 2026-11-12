@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | AtlasCloud{% endblock %}
+
+{% block content %}
+<main class="mx-auto flex min-h-screen max-w-2xl items-center px-4 py-12">
+    <section class="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-300/30 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20">
+        <a href="{% url 'projects:list' organization.slug %}" class="text-sm text-cyan-600 hover:text-cyan-500 dark:text-cyan-400 dark:hover:text-cyan-300">← Projects</a>
+        <h1 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white">{{ title }}</h1>
+        <form method="post" class="mt-8 space-y-5">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="mt-1 text-sm text-red-600 dark:text-red-300">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="w-full rounded-lg bg-cyan-400 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300">Save project</button>
+        </form>
+    </section>
+</main>
+{% endblock %}
