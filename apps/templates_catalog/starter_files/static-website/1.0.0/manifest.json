@@ -1,0 +1,12 @@
+{
+  "files": [
+    "README.md",
+    "index.html",
+    "styles.css",
+    "script.js"
+  ],
+  "rendered_files": [
+    "README.md",
+    "index.html"
+  ]
+}

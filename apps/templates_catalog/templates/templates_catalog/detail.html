@@ -21,7 +21,7 @@
                 <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ template.get_category_display }} · Version {{ template.version }}</p>
             </div>
         </div>
-        <a href="{% url 'templates_catalog:use' template.slug %}" class="rounded-lg bg-cyan-400 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300">Use this template</a>
+        <a href="{% url 'projects:create_without_organization' %}?template={{ template.pk }}" class="rounded-lg bg-cyan-400 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300">Create project with this template</a>
     </div>
     <div class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">

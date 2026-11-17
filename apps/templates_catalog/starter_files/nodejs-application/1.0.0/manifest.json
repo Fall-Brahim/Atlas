@@ -1,0 +1,10 @@
+{
+  "files": [
+    "README.md",
+    "package.json",
+    "server.js"
+  ],
+  "rendered_files": [
+    "README.md"
+  ]
+}

@@ -1,8 +1,9 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
-
-from apps.organizations.models import Membership
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from .forms import TemplateSearchForm
 from .models import ApplicationTemplate
@@ -52,14 +53,7 @@ def template_use(request, slug):
         slug=slug,
         is_active=True,
     )
-    memberships = Membership.objects.filter(
-        user=request.user,
-    ).select_related('organization')
-    return render(
-        request,
-        'templates_catalog/use.html',
-        {
-            'template': template,
-            'memberships': memberships,
-        },
+    query = urlencode({'template': template.pk})
+    return redirect(
+        f"{reverse('projects:create_without_organization')}?{query}"
     )

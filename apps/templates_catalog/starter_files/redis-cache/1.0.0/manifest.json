@@ -1,0 +1,9 @@
+{
+  "files": [
+    "README.md",
+    "redis.conf"
+  ],
+  "rendered_files": [
+    "README.md"
+  ]
+}

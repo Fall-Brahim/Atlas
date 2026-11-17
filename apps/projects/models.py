@@ -29,6 +29,7 @@ class Project(models.Model):
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=170)
     description = models.TextField(blank=True)
+    configuration = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=10,
         choices=Status.choices,

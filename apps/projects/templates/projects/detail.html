@@ -26,6 +26,23 @@
             <div><dt class="text-sm text-slate-500 dark:text-slate-400">Last updated</dt><dd class="mt-1 font-medium text-slate-900 dark:text-white">{{ project.updated_at|date:"Y-m-d H:i" }}</dd></div>
         </dl>
     </section>
+    {% if project.template and has_starter_kit %}
+    <section class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Starter application</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Configure this template version and download its source files as a ZIP.</p>
+            </div>
+            {% if can_manage_project %}
+            <a href="{% url 'projects:generate' organization.slug project.slug %}" class="rounded-lg bg-cyan-400 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-300">Configure and download</a>
+            {% else %}
+            <p class="text-sm text-slate-500 dark:text-slate-400">Only organization owners and admins can generate the starter.</p>
+            {% endif %}
+        </div>
+    </section>
+    {% elif project.template %}
+    <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">A starter source package is not available for this template version.</p>
+    {% endif %}
     {% if membership.role == "OWNER" or membership.role == "ADMIN" %}
     <div class="mt-6 flex flex-wrap gap-3">
         {% if project.status == "ARCHIVED" %}

@@ -1,0 +1,16 @@
+{
+  "files": [
+    "README.md",
+    "requirements.txt",
+    "manage.py",
+    "config/__init__.py",
+    "config/settings.py",
+    "config/wsgi.py",
+    "config/urls.py",
+    "app/__init__.py",
+    "app/views.py"
+  ],
+  "rendered_files": [
+    "README.md"
+  ]
+}

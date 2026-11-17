@@ -1,3 +1,10 @@
+import json
+import zipfile
+from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -5,7 +12,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.organizations.models import Membership, Organization
+from apps.projects.models import Project
 
+from . import generator
 from .models import ApplicationTemplate
 
 
@@ -66,11 +75,139 @@ class ApplicationTemplateModelTests(TestCase):
 
     def test_sensitive_metadata_is_rejected(self):
         template = ApplicationTemplate(**self.template_data(
-            technology_stack={'framework': 'Django', 'password': 'never-store-this'}
+            technology_stack={'framework': 'Django', 'api_key': 'never-store-this'}
         ))
 
         with self.assertRaises(ValidationError):
             template.full_clean()
+
+    def test_secret_like_configuration_field_names_are_rejected(self):
+        template = ApplicationTemplate(**self.template_data(
+            configuration_schema={
+                'fields': {'private-key': {'type': 'string'}}
+            }
+        ))
+
+        with self.assertRaises(ValidationError):
+            template.full_clean()
+
+    def test_choice_configuration_fields_require_valid_choices(self):
+        template = ApplicationTemplate(**self.template_data(
+            configuration_schema={
+                'fields': {'region': {'type': 'choice', 'choices': 'north'}}
+            }
+        ))
+
+        with self.assertRaises(ValidationError):
+            template.full_clean()
+
+
+class StarterKitGeneratorTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            email='starter@example.com',
+            password='AtlasCloud-safe-password-42!',
+        )
+        self.organization = Organization.objects.create(
+            name='Starter workspace',
+            slug='starter-workspace',
+        )
+        self.templates = ApplicationTemplate.objects.filter(
+            slug__in=(
+                'django-application',
+                'fastapi-application',
+                'nodejs-application',
+                'static-website',
+                'postgresql-database',
+                'redis-cache',
+            ),
+            version='1.0.0',
+        )
+
+    def test_all_seeded_template_versions_generate_valid_archives(self):
+        self.assertEqual(self.templates.count(), 6)
+
+        for template in self.templates:
+            with self.subTest(template=template.slug):
+                project = Project.objects.create(
+                    organization=self.organization,
+                    created_by=self.user,
+                    name='Portal $1 {{PROJECT_SLUG}}',
+                    slug=f'portal-{template.slug}',
+                    description='Example project description',
+                    template=template,
+                    configuration={'port': 4321},
+                )
+                archive = generator.build_project_archive(
+                    template=template,
+                    project=project,
+                    configuration=project.configuration,
+                )
+
+                with zipfile.ZipFile(BytesIO(archive)) as bundle:
+                    self.assertIsNone(bundle.testzip())
+                    self.assertIn('README.md', bundle.namelist())
+                    metadata = json.loads(
+                        bundle.read('atlascloud-project.json')
+                    )
+                    self.assertEqual(
+                        metadata['template']['version'],
+                        template.version,
+                    )
+                    self.assertEqual(
+                        metadata['configuration'],
+                        project.configuration,
+                    )
+                    readme = bundle.read('README.md').decode('utf-8')
+                    self.assertIn(project.name, readme)
+                    self.assertIn('{{PROJECT_SLUG}}', readme)
+
+    def test_manifest_cannot_write_files_outside_starter_directory(self):
+        template = self.templates.get(slug='django-application')
+        project = Project.objects.create(
+            organization=self.organization,
+            created_by=self.user,
+            name='Safe project',
+            slug='safe-project',
+            template=template,
+        )
+
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            starter = root / template.slug / template.version
+            starter.mkdir(parents=True)
+            (starter / 'manifest.json').write_text(
+                '{"files": ["../outside.txt"]}',
+                encoding='utf-8',
+            )
+            with patch.object(generator, 'STARTER_FILES_ROOT', root):
+                with self.assertRaises(ValueError):
+                    generator.build_project_archive(
+                        template=template,
+                        project=project,
+                        configuration={},
+                    )
+
+    def test_html_template_escapes_project_supplied_content(self):
+        template = self.templates.get(slug='static-website')
+        project = Project.objects.create(
+            organization=self.organization,
+            created_by=self.user,
+            name='<script>alert(1)</script>',
+            slug='escaped-project',
+            template=template,
+        )
+        archive = generator.build_project_archive(
+            template=template,
+            project=project,
+            configuration={},
+        )
+
+        with zipfile.ZipFile(BytesIO(archive)) as bundle:
+            html = bundle.read('index.html').decode('utf-8')
+        self.assertIn('&lt;script&gt;', html)
+        self.assertNotIn('<script>alert(1)</script>', html)
 
 
 class TemplateCatalogFlowTests(TestCase):
@@ -182,9 +319,13 @@ class TemplateCatalogFlowTests(TestCase):
 
         self.assertContains(response, self.django_template.version)
         self.assertContains(response, 'Django')
+        self.assertContains(
+            response,
+            f'{reverse("projects:create_without_organization")}?template={self.django_template.pk}',
+        )
 
-    def test_using_template_shows_accessible_organizations(self):
-        self.client.force_login(self.owner)
+    def test_using_template_redirects_to_shared_project_creation(self):
+        self.client.force_login(self.user)
 
         response = self.client.get(
             reverse(
@@ -193,10 +334,9 @@ class TemplateCatalogFlowTests(TestCase):
             )
         )
 
-        self.assertContains(response, self.organization.name)
-        self.assertContains(
+        self.assertRedirects(
             response,
-            f'?template={self.django_template.slug}',
+            f'{reverse("projects:create_without_organization")}?template={self.django_template.pk}',
         )
 
     def test_user_cannot_use_inactive_template(self):
